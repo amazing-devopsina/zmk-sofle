@@ -4,7 +4,6 @@
 #include <input/processors.dtsi>
 #include <zephyr/dt-bindings/input/input-event-codes.h>
 #include <behaviors.dtsi>
-#include <behaviors/runtime-sensor-rotate.dtsi>
 #include <dt-bindings/zmk/bt.h>
 #include <dt-bindings/zmk/keys.h>
 #include <dt-bindings/zmk/outputs.h>
@@ -46,19 +45,20 @@
         tap-ms = <0>;
     };
 
-    behaviors {
-        rsr_vol: rsr_vol {
-            compatible = "zmk,behavior-runtime-sensor-rotate";
-            #sensor-binding-cells = <0>;
-            tap-ms = <5>;
-            cw-binding = <&kp C_VOL_UP>;
-            ccw-binding = <&kp C_VOL_DN>;
-        };
+    vol_enc: vol_enc {
+        compatible = "zmk,behavior-sensor-rotate";
+        #sensor-binding-cells = <0>;
+        bindings = <&kp C_VOL_DN>, <&kp C_VOL_UP>;
 
-        rsr_trans: rsr_trans {
-            compatible = "zmk,behavior-runtime-sensor-rotate";
-            #sensor-binding-cells = <0>;
-            tap-ms = <0>;
+        tap-ms = <5>;
+    };
+
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+
+        tech_layer {
+            if-layers = <1 2>;
+            then-layer = <3>;
         };
     };
 
@@ -97,7 +97,7 @@
 &kp TAB     &kp Q      &kp W         &kp E         &kp R   &kp T        &mmv MOVE_DOWN   &kp Y      &kp U      &kp I      &kp O            &kp P       &kp BSLH
 &kp LCTRL   &kp A      &kp S         &kp D         &kp F   &kp G        &mmv MOVE_LEFT   &kp H      &kp J      &kp K      &kp L            &kp SEMI    &kp APOS
 &kp LSHFT   &kp Z      &kp X         &kp C         &kp V   &kp B        &mmv MOVE_RIGHT  &kp N      &kp M      &kp COMMA  &kp DOT          &kp FSLH    &kp RIGHT_SHIFT
-&mkp RCLK   &kp LCTRL  &kp LEFT_ALT  &kp LEFT_GUI  &mo 1   &kp SPACE    &mkp LCLK        &kp ENTER  &mo 2      &kp RIGHT_GUI  &tog 3         &kp DELETE
+&mkp RCLK   &kp LCTRL  &kp LEFT_ALT  &kp LEFT_GUI  &mo 1   &kp SPACE    &mkp LCLK        &kp ENTER  &mo 2      &kp RIGHT_GUI  &kp RIGHT_ALT  &kp DELETE
             >;
 
             sensor-bindings = <&scroll_encoder>;
@@ -106,54 +106,64 @@
 
         layer_1 {
             bindings = <
-&kp GRAVE   &kp F1           &kp F2          &kp F3           &kp F4           &kp F5             &mmv MOVE_UP     &kp F6           &kp F7           &kp F8      &kp F9     &kp F10           &trans
-&trans      &kp GRAVE        &mkp LCLK       &mkp MCLK        &mkp RCLK        &mkp MB4           &mmv MOVE_DOWN   &kp PG_UP        &kp END          &kp UP      &kp HOME   &kp MINUS         &kp EQUAL
-&trans      &kp TILDE        &trans          &trans           &trans           &mkp MB5           &mmv MOVE_LEFT   &kp PG_DN        &kp LEFT         &kp DOWN    &kp RIGHT  &kp LEFT_BRACKET  &kp RIGHT_BRACKET
-&trans      &rgb_ug RGB_OFF  &rgb_ug RGB_ON  &rgb_ug RGB_EFF  &rgb_ug RGB_EFR  &rgb_ug RGB_SPI    &mmv MOVE_RIGHT  &rgb_ug RGB_BRI  &rgb_ug RGB_BRD  &kp INSERT  &kp F11    &kp F12           &trans
-&kp C_MUTE  &trans           &trans          &trans           &trans           &trans             &mkp LCLK        &trans           &trans           &trans      &trans     &trans
+&kp F1  &kp F2     &kp F3  &kp F4  &kp F5  &kp F6    &trans  &kp F7    &kp F8     &kp F9     &kp F10    &kp F11    &kp F12
+&trans  &kp GRAVE  &trans  &trans  &trans  &trans    &trans  &kp HOME  &kp PG_DN  &kp PG_UP  &kp END    &kp MINUS  &kp EQUAL
+&trans  &trans     &trans  &trans  &trans  &trans    &trans  &kp LEFT  &kp DOWN   &kp UP     &kp RIGHT  &kp LBKT   &kp RBKT
+&trans  &trans     &trans  &trans  &trans  &trans    &trans  &trans    &trans     &trans     &trans     &trans     &trans
+&trans  &trans     &trans  &trans  &trans  &trans    &trans  &trans    &trans     &trans     &trans     &trans
             >;
 
-            sensor-bindings = <&rsr_vol &rsr_trans>;
-            display-name = "LAYER1";
+            display-name = "FN-NAV";
         };
 
         layer_2 {
             bindings = <
-&kp TILDE  &bt BT_SEL 0  &bt BT_SEL 1    &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &mmv MOVE_UP     &kp F6  &kp F7  &kp F8      &kp F9     &kp F10      &trans
-&trans     &bt BT_CLR    &bt BT_CLR_ALL  &trans        &trans        &trans          &mmv MOVE_DOWN   &trans  &trans  &kp F11     &kp F12    &kp UNDER    &kp PLUS
-&trans     &out OUT_USB  &out OUT_BLE    &trans        &trans        &trans          &mmv MOVE_LEFT   &trans  &trans  &trans      &trans     &kp LBRC     &kp RBRC
-&trans     &sys_reset    &trans          &bootloader   &trans        &trans          &mmv MOVE_RIGHT  &trans  &trans  &sys_reset  &soft_off  &bootloader  &trans
-&trans     &trans        &trans          &trans        &trans        &trans          &mkp LCLK        &trans  &trans  &trans      &trans     &trans
+&trans  &kp C_BRI_DN  &kp C_BRI_UP  &trans      &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &kp C_PREV    &kp C_PP      &kp C_NEXT  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &kp C_VOL_DN  &kp C_VOL_UP  &kp C_MUTE  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans        &trans        &trans      &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans        &trans        &trans      &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans
             >;
 
-            display-name = "LAYER2";
-            sensor-bindings = <&rsr_vol &rsr_trans>;
+            display-name = "MEDIA";
+            sensor-bindings = <&vol_enc>;
         };
 
         layer_3 {
             bindings = <
-&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
-&none   &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans
+&trans  &bt BT_SEL 0  &bt BT_SEL 1    &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4    &trans  &trans  &trans  &trans      &trans     &tog 4       &tog 5
+&trans  &bt BT_CLR    &bt BT_CLR_ALL  &trans        &trans        &trans          &trans  &trans  &trans  &trans      &trans     &trans       &trans
+&trans  &out OUT_USB  &out OUT_BLE    &trans        &trans        &trans          &trans  &trans  &trans  &trans      &trans     &trans       &trans
+&trans  &sys_reset    &trans          &bootloader   &trans        &trans          &trans  &trans  &trans  &sys_reset  &soft_off  &bootloader  &trans
+&trans  &trans        &trans          &trans        &trans        &trans          &trans  &trans  &trans  &trans      &trans     &trans
             >;
 
-            display-name = "NOMOUSE";
-            sensor-bindings = <&enc_off>;
+            display-name = "TECH";
         };
 
         layer_4 {
+            bindings = <
+&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans  &trans
+&trans  &trans  &trans  &trans  &trans  &trans    &none   &trans  &trans  &trans  &trans  &trans
+            >;
+
+            display-name = "JOYOFF";
+        };
+
+        layer_5 {
             bindings = <
 &trans  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
 &trans  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans  &trans
-&trans  &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans
+&none   &trans  &trans  &trans  &trans  &trans    &trans  &trans  &trans  &trans  &trans  &trans
             >;
 
-            display-name = "LAYER4";
-            sensor-bindings = <&rsr_vol &rsr_trans>;
+            display-name = "ENCOFF";
+            sensor-bindings = <&enc_off>;
         };
     };
 };
